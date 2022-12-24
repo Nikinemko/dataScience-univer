@@ -14,15 +14,19 @@ def parse_yelp_page(url):
     # html = parse_yelp_page_dict[url]
 
     soup = BeautifulSoup(html, 'html.parser')
-    reviewsHtml = soup.select("#reviews > section > div > div > ul > li")
-    reviewsCount = len(soup.select(
+    reviews_html = soup.select("#reviews > section > div > div > ul > li")
+    pages_count = len(soup.select(
         "div[class^='pagination-links'] > div[class^='pagination-link-container']"))
+    print("Parsing: ", soup.select_one(
+        "div[role='navigation'] > div:last-child > span").string)
+    current_page, max_pages = re.findall("^(\d+) of (\d+)", soup.select_one(
+        "div[role='navigation'] > div:last-child > span").string)[0]
     reviews = map(lambda item: {
         'author': item.select_one(".user-passport-info > span > a").string,
         'rating': re.findall("^\d+", item.select_one("div > div > div > div:first-child > span > div").attrs['aria-label'])[0],
         'date': item.select_one("div > div:nth-child(2) > div > div:last-child > span").string,
         'description': item.select_one("div > div > p[class^='comment'] > span").string
-    }, reviewsHtml)
+    }, reviews_html)
     """
     Parse the reviews on a single page of a restaurant.
 
@@ -41,4 +45,4 @@ def parse_yelp_page(url):
     # with the command:
     # html = parse_yelp_page_dict[url]
 
-    return reviews, reviewsCount
+    return reviews, pages_count, int(current_page), int(max_pages)
